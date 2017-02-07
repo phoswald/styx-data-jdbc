@@ -51,7 +51,7 @@ class JdbcDatabase implements Database {
     @Override
     public Stream<Row> selectAll() {
         try {
-            PreparedStatement statement = makePreparedStatement("SELECT PARENT, KEY, SUFFIX, VALUE FROM STYX_DATA ORDER BY PARENT, KEY");
+            PreparedStatement statement = makePreparedStatement("SELECT PARENT_, KEY_, SUFFIX_, VALUE_ FROM STYX_DATA ORDER BY PARENT_, KEY_");
             List<Row> rows = new ArrayList<>();
             try(ResultSet result = statement.executeQuery()) {
                 while(result.next()) {
@@ -67,7 +67,7 @@ class JdbcDatabase implements Database {
     @Override
     public Optional<Row> selectSingle(Path parent, String key) {
         try {
-            PreparedStatement statement = makePreparedStatement("SELECT PARENT, KEY, SUFFIX, VALUE FROM STYX_DATA WHERE PARENT=? AND KEY=?");
+            PreparedStatement statement = makePreparedStatement("SELECT PARENT_, KEY_, SUFFIX_, VALUE_ FROM STYX_DATA WHERE PARENT_=? AND KEY_=?");
             statement.setString(1, parent.encode());
             statement.setString(2, key);
             try(ResultSet result = statement.executeQuery()) {
@@ -85,7 +85,7 @@ class JdbcDatabase implements Database {
     @Override
     public Stream<Row> selectChildren(Path parent) {
         try {
-            PreparedStatement statement = makePreparedStatement("SELECT PARENT, KEY, SUFFIX, VALUE FROM STYX_DATA WHERE PARENT=?");
+            PreparedStatement statement = makePreparedStatement("SELECT PARENT_, KEY_, SUFFIX_, VALUE_ FROM STYX_DATA WHERE PARENT_=?");
             statement.setString(1, parent.encode());
             List<Row> rows = new ArrayList<>();
             try(ResultSet result = statement.executeQuery()) {
@@ -102,7 +102,7 @@ class JdbcDatabase implements Database {
     @Override
     public Stream<Row> selectDescendants(Path parent) {
         try {
-            PreparedStatement statement = makePreparedStatement("SELECT PARENT, KEY, SUFFIX, VALUE FROM STYX_DATA WHERE PARENT LIKE ?"); // ORDER BY KEY, SUFFIX
+            PreparedStatement statement = makePreparedStatement("SELECT PARENT_, KEY_, SUFFIX_, VALUE_ FROM STYX_DATA WHERE PARENT_ LIKE ?"); // ORDER BY KEY_, SUFFIX_
             statement.setString(1, parent.encode() + "%");
             List<Row> rows = new ArrayList<>();
             try(ResultSet result = statement.executeQuery()) {
@@ -119,7 +119,7 @@ class JdbcDatabase implements Database {
     @Override
     public int allocateSuffix(Path parent) {
         try {
-            PreparedStatement statement = makePreparedStatement("SELECT MAX(SUFFIX) FROM STYX_DATA WHERE PARENT = ?");
+            PreparedStatement statement = makePreparedStatement("SELECT MAX(SUFFIX_) FROM STYX_DATA WHERE PARENT_ = ?");
             statement.setString(1, parent.encode());
             try(ResultSet result = statement.executeQuery()) {
                if(result.next()) {
@@ -135,7 +135,7 @@ class JdbcDatabase implements Database {
     @Override
     public void insert(Row row) {
         try {
-            PreparedStatement statement = makePreparedStatement("INSERT INTO STYX_DATA (PARENT, KEY, SUFFIX, VALUE) VALUES (?,?,?,?)");
+            PreparedStatement statement = makePreparedStatement("INSERT INTO STYX_DATA (PARENT_, KEY_, SUFFIX_, VALUE_) VALUES (?,?,?,?)");
             statement.setString(1, row.parent().encode());
             statement.setString(2, row.key());
             statement.setInt   (3, row.suffix());
@@ -160,7 +160,7 @@ class JdbcDatabase implements Database {
     @Override
     public void deleteSingle(Path parent, String key) {
         try {
-            PreparedStatement statement = makePreparedStatement("DELETE FROM STYX_DATA WHERE PARENT=? AND KEY=?");
+            PreparedStatement statement = makePreparedStatement("DELETE FROM STYX_DATA WHERE PARENT_=? AND KEY_=?");
             statement.setString(1, parent.encode());
             statement.setString(2, key);
             statement.execute();
@@ -172,7 +172,7 @@ class JdbcDatabase implements Database {
     @Override
     public void deleteDescendants(Path parent) {
         try {
-            PreparedStatement statement = makePreparedStatement("DELETE FROM STYX_DATA WHERE PARENT LIKE ?");
+            PreparedStatement statement = makePreparedStatement("DELETE FROM STYX_DATA WHERE PARENT_ LIKE ?");
             statement.setString(1, parent.encode() + "%");
             statement.execute();
         } catch (SQLException e) {
@@ -189,7 +189,7 @@ class JdbcDatabase implements Database {
         }
         if(!exists) {
             try(Statement statement = connection.createStatement()) {
-                statement.execute("CREATE TABLE STYX_DATA(PARENT VARCHAR(100) NOT NULL, KEY VARCHAR(10000) NOT NULL, SUFFIX INT, VALUE VARCHAR(30000), PRIMARY KEY (PARENT, KEY))");
+                statement.execute("CREATE TABLE STYX_DATA(PARENT_ VARCHAR(100) NOT NULL, KEY_ VARCHAR(10000) NOT NULL, SUFFIX_ INT, VALUE_ VARCHAR(30000), PRIMARY KEY (PARENT_, KEY_))");
             }
         }
     }
