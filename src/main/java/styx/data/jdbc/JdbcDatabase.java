@@ -189,6 +189,9 @@ class JdbcDatabase implements Database {
         }
         if(!exists) {
             try(Statement statement = connection.createStatement()) {
+                if(url.startsWith("jdbc:sqlite:")) {
+                    statement.execute("PRAGMA case_sensitive_like = true;");
+                }
                 statement.execute("CREATE TABLE STYX_DATA(PARENT_ VARCHAR(100) NOT NULL, KEY_ VARCHAR(10000) NOT NULL, SUFFIX_ INT, VALUE_ VARCHAR(30000), PRIMARY KEY (PARENT_, KEY_))");
             }
         }
