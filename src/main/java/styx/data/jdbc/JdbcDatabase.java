@@ -182,17 +182,36 @@ class JdbcDatabase implements Database {
 
     private void checkSchema() throws SQLException {
         boolean exists = false;
-        try(ResultSet result = connection.getMetaData().getTables(null, null, "STYX_DATA", null)) {
+        String tableName = "STYX_DATA";
+        if(url.startsWith("jdbc:postgresql:")) {
+            tableName = tableName.toLowerCase();
+        }
+        try(ResultSet result = connection.getMetaData().getTables(null, null, tableName, null)) {
             while(result.next()) {
                 exists = true;
             }
         }
         if(!exists) {
             try(Statement statement = connection.createStatement()) {
+                String tableCollation = "";
+                String columnCollation = "";
                 if(url.startsWith("jdbc:sqlite:")) {
                     statement.execute("PRAGMA case_sensitive_like = true;");
                 }
-                statement.execute("CREATE TABLE STYX_DATA(PARENT_ VARCHAR(100) NOT NULL, KEY_ VARCHAR(10000) NOT NULL, SUFFIX_ INT, VALUE_ VARCHAR(30000), PRIMARY KEY (PARENT_, KEY_))");
+                if(url.startsWith("jdbc:mysql:")) {
+                    tableCollation = " CHARSET utf8 COLLATE utf8_bin";
+                }
+                if(url.startsWith("jdbc:postgresql:")) {
+                    columnCollation = " COLLATE \"C\"";
+                }
+                statement.execute(
+                        "CREATE TABLE STYX_DATA(\n"+
+                        "  PARENT_ VARCHAR(100) NOT NULL"+columnCollation+",\n"+
+                        "  KEY_ VARCHAR(500) NOT NULL"+columnCollation+",\n"+
+                        "  SUFFIX_ INT,\n"+
+                        "  VALUE_ VARCHAR(10000),\n"+
+                        "  PRIMARY KEY (PARENT_, KEY_)\n"+
+                        ")" + tableCollation);
             }
         }
     }

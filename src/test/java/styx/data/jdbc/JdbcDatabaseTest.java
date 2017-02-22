@@ -20,6 +20,8 @@ public class JdbcDatabaseTest extends GenericDatabaseTest {
         return Arrays.asList(
                 new Object[] { "jdbc:h2:mem:" },
                 new Object[] { "jdbc:derby:memory:test;create=true" },
-                new Object[] { "jdbc:sqlite::memory:" });
+                new Object[] { "jdbc:sqlite::memory:" },
+                new Object[] { "jdbc:mysql://localhost/styx_test?user=root&password=sesam" },
+                new Object[] { "jdbc:postgresql://localhost/styx_test?user=postgres&password=sesam" });
     }
 }
