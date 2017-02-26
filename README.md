@@ -1,5 +1,5 @@
 # styx-data-jdbc
-JDBC support for styx-data
+JDBC backend for styx-data
 
 ## Running JUnit Tests
 

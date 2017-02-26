@@ -13,7 +13,7 @@
   <packaging>jar</packaging>
 
   <name>styx-data-jdbc</name>
-  <description>A universal data format</description>
+  <description>JDBC backend for styx-data</description>
   <url>https://github.com/phoswald/styx-data-jdbc</url>
 
   <properties>
