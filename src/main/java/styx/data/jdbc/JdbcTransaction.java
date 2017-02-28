@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -132,7 +133,11 @@ class JdbcTransaction implements DatabaseTransaction {
             PreparedStatement statement = makePreparedStatement("INSERT INTO STYX_DATA (PARENT_, KEY_, SUFFIX_, VALUE_) VALUES (?,?,?,?)");
             statement.setString(1, row.parent().encode());
             statement.setString(2, row.key());
-            statement.setInt   (3, row.suffix());
+            if(row.suffix() == 0) {
+                statement.setNull(3, Types.INTEGER);
+            } else {
+                statement.setInt(3, row.suffix());
+            }
             statement.setString(4, row.value());
             statement.execute();
         } catch (SQLException e) {
