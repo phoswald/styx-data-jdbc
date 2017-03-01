@@ -80,7 +80,7 @@ class JdbcTransaction implements DatabaseTransaction {
     @Override
     public Stream<Row> selectChildren(Path parent) {
         try {
-            PreparedStatement statement = makePreparedStatement("SELECT PARENT_, KEY_, SUFFIX_, VALUE_ FROM STYX_DATA WHERE PARENT_=?");
+            PreparedStatement statement = makePreparedStatement("SELECT PARENT_, KEY_, SUFFIX_, VALUE_ FROM STYX_DATA WHERE PARENT_=? ORDER BY PARENT_, KEY_");
             statement.setString(1, parent.encode());
             List<Row> rows = new ArrayList<>();
             try(ResultSet result = statement.executeQuery()) {
@@ -97,7 +97,7 @@ class JdbcTransaction implements DatabaseTransaction {
     @Override
     public Stream<Row> selectDescendants(Path parent) {
         try {
-            PreparedStatement statement = makePreparedStatement("SELECT PARENT_, KEY_, SUFFIX_, VALUE_ FROM STYX_DATA WHERE PARENT_ LIKE ?"); // ORDER BY KEY_, SUFFIX_
+            PreparedStatement statement = makePreparedStatement("SELECT PARENT_, KEY_, SUFFIX_, VALUE_ FROM STYX_DATA WHERE PARENT_ LIKE ? ORDER BY PARENT_, KEY_"); // ORDER BY KEY_, SUFFIX_
             statement.setString(1, parent.encode() + "%");
             List<Row> rows = new ArrayList<>();
             try(ResultSet result = statement.executeQuery()) {
