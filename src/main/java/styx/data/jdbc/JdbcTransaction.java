@@ -20,12 +20,16 @@ class JdbcTransaction implements DatabaseTransaction {
 
     private final String url;
     private final Connection connection;
-    private final Map<String, PreparedStatement> statements ;
+    private final Map<String, PreparedStatement> statements;
+    private final boolean readOnly;
+    private boolean commit;
 
-    JdbcTransaction(String url, Connection connection, Map<String, PreparedStatement> statements) {
+    JdbcTransaction(String url, Connection connection, Map<String, PreparedStatement> statements, boolean readOnly) {
         this.url = url;
         this.connection = connection;
         this.statements = statements;
+        this.readOnly = readOnly;
+        this.commit = false;
         try {
             checkSchema();
         } catch (SQLException e) {
@@ -37,10 +41,19 @@ class JdbcTransaction implements DatabaseTransaction {
     @Override
     public void close() {
         try {
-            connection.commit();
+            if(!readOnly && commit) {
+                connection.commit();
+            } else {
+                connection.rollback();
+            }
         } catch (SQLException e) {
             throw new JdbcException("Failed to commit JDBC transaction for " + url, e);
         }
+    }
+
+    @Override
+    public void markCommit() {
+        commit = true;
     }
 
     @Override
@@ -129,6 +142,9 @@ class JdbcTransaction implements DatabaseTransaction {
 
     @Override
     public void insert(Row row) {
+        if(readOnly) {
+            throw new IllegalStateException();
+        }
         try {
             PreparedStatement statement = makePreparedStatement("INSERT INTO STYX_DATA (PARENT_, KEY_, SUFFIX_, VALUE_) VALUES (?,?,?,?)");
             statement.setString(1, row.parent().encode());
@@ -147,6 +163,9 @@ class JdbcTransaction implements DatabaseTransaction {
 
     @Override
     public void deleteAll() {
+        if(readOnly) {
+            throw new IllegalStateException();
+        }
         try {
             try(Statement statement = connection.createStatement()) {
                 statement.execute("DELETE FROM STYX_DATA");
@@ -158,6 +177,9 @@ class JdbcTransaction implements DatabaseTransaction {
 
     @Override
     public void deleteSingle(Path parent, String key) {
+        if(readOnly) {
+            throw new IllegalStateException();
+        }
         try {
             PreparedStatement statement = makePreparedStatement("DELETE FROM STYX_DATA WHERE PARENT_=? AND KEY_=?");
             statement.setString(1, parent.encode());
@@ -170,6 +192,9 @@ class JdbcTransaction implements DatabaseTransaction {
 
     @Override
     public void deleteDescendants(Path parent) {
+        if(readOnly) {
+            throw new IllegalStateException();
+        }
         try {
             PreparedStatement statement = makePreparedStatement("DELETE FROM STYX_DATA WHERE PARENT_ LIKE ?");
             statement.setString(1, parent.encode() + "%");

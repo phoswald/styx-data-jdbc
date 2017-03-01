@@ -39,11 +39,11 @@ class JdbcDatabase implements Database {
 
     @Override
     public DatabaseTransaction openReadTransaction() {
-        return openWriteTransaction();
+        return new JdbcTransaction(url, connection, statements, true);
     }
 
     @Override
     public DatabaseTransaction openWriteTransaction() {
-        return new JdbcTransaction(url, connection, statements);
+        return new JdbcTransaction(url, connection, statements, false);
     }
 }
