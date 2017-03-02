@@ -12,6 +12,11 @@ import styx.data.db.DatabaseTransaction;
 
 class JdbcDatabase implements Database {
 
+    // TODO: support multiple concurrent transactions (and thus, JDBC connections)!
+    //
+    // A stateless implementation would be even better, but DataSource is a tricky interface to implement
+    // and opening a new connection for each transaction breaks tests for in-memory databases with volatile state.
+
     private final String url;
     private final Connection connection;
     private final Map<String, PreparedStatement> statements = new HashMap<>();
@@ -29,12 +34,23 @@ class JdbcDatabase implements Database {
     @Override
     public void close() {
         try {
-            // TODO (semantics): where to close connection, is styx.data.db.Database a resource or a service!?
-            // TODO (JDBC spec): do we have to close the statements?
-            connection.close();
+            try {
+                closeStatements();
+            } finally {
+                connection.close();
+            }
         } catch (SQLException e) {
             throw new JdbcException("Failed to close JDBC connection for " + url, e);
         }
+    }
+
+    private void closeStatements() throws SQLException {
+        // Probably not necessary as statements should be closed when the connection is closed,
+        // but some drivers are known to be leaky (especially Oracle).
+        for(PreparedStatement statement : statements.values()) {
+            statement.close();
+        }
+        statements.clear();
     }
 
     @Override

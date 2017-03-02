@@ -31,10 +31,10 @@ class JdbcTransaction implements DatabaseTransaction {
         this.readOnly = readOnly;
         this.commit = false;
         try {
-            checkSchema();
+            checkAndCreateTable();
         } catch (SQLException e) {
             close();
-            throw new JdbcException("Failed to check or create database schema for " + url, e);
+            throw new JdbcException("Failed to check or create database table for " + url, e);
         }
     }
 
@@ -47,7 +47,7 @@ class JdbcTransaction implements DatabaseTransaction {
                 connection.rollback();
             }
         } catch (SQLException e) {
-            throw new JdbcException("Failed to commit JDBC transaction for " + url, e);
+            throw new JdbcException("Failed to commit or rollback JDBC transaction for " + url, e);
         }
     }
 
@@ -118,7 +118,7 @@ class JdbcTransaction implements DatabaseTransaction {
                     rows.add(createRow(result));
                 }
             }
-            return rows.stream().sorted(Row.ITERATION_ORDER); // TODO (optimize): try to sort in DB if possible
+            return rows.stream().sorted(Row.ITERATION_ORDER);
         } catch (SQLException e) {
             throw new JdbcException("Failed to execute SELECT statement.", e);
         }
@@ -204,7 +204,7 @@ class JdbcTransaction implements DatabaseTransaction {
         }
     }
 
-    private void checkSchema() throws SQLException {
+    private void checkAndCreateTable() throws SQLException {
         boolean exists = false;
         String tableName = "STYX_DATA";
         if(url.startsWith("jdbc:postgresql:")) {
